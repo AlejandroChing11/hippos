@@ -1,26 +1,51 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
+@theme {
+  --font-heading: var(--font-lora);
+  --font-body: var(--font-dm-sans);
+
+  --color-canvas: #F8F7F4;
+  --color-surface: #FFFFFF;
+  --color-surface-hover: #F5F4F1;
+  --color-inset: #EEECEA;
+
+  --color-ink: #2C2825;
+  --color-ink-secondary: #6B6560;
+  --color-ink-tertiary: #9C9690;
+  --color-ink-muted: #B8B3AD;
+
+  --color-sage: #5B8C5A;
+  --color-sage-dark: #4A7349;
+  --color-sage-light: #E8F0E8;
+
+  --color-danger: #C25B4E;
+  --color-danger-light: #FCEAE8;
+  --color-warning: #C4903D;
+  --color-warning-light: #FDF3E4;
+  --color-success: #5B8C5A;
+  --color-success-light: #E8F0E8;
+  --color-info: #5B7B9C;
+  --color-info-light: #E8EFF5;
+
+  --color-border: #E5E2DD;
+  --color-border-strong: #D4D0CA;
+
+  --shadow-xs: 0 1px 2px oklch(0% 0 0 / 0.04);
+  --shadow-sm: 0 1px 3px oklch(0% 0 0 / 0.06);
+  --shadow-md: 0 2px 8px oklch(0% 0 0 / 0.08);
+  --shadow-lg: 0 4px 16px oklch(0% 0 0 / 0.1);
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+html {
+  scroll-behavior: smooth;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+input[type="number"]::-webkit-inner-spin-button,
+input[type="number"]::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+input[type="number"] {
+  -moz-appearance: textfield;
 }

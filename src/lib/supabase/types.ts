@@ -1,0 +1,220 @@
+export type Database = {
+  hippos: {
+    Tables: {
+      patients: {
+        Row: {
+          id: string;
+          first_name: string;
+          last_name: string;
+          full_name: string;
+          birth_date: string;
+          sex: 'M' | 'F';
+          weight: number;
+          height: number;
+          pathologies: string[];
+          food_allergies: string[];
+          objective: 'WEIGHT_LOSS' | 'MAINTENANCE' | 'MUSCLE_GAIN' | 'PREGNANCY' | 'OTHER';
+          activity_level: 'SEDENTARY' | 'LIGHTLY_ACTIVE' | 'MODERATELY_ACTIVE' | 'VERY_ACTIVE' | 'EXTREMELY_ACTIVE';
+          notes: string;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          first_name: string;
+          last_name: string;
+          birth_date: string;
+          sex: 'M' | 'F';
+          weight: number;
+          height: number;
+          pathologies?: string[];
+          food_allergies?: string[];
+          objective: 'WEIGHT_LOSS' | 'MAINTENANCE' | 'MUSCLE_GAIN' | 'PREGNANCY' | 'OTHER';
+          activity_level: 'SEDENTARY' | 'LIGHTLY_ACTIVE' | 'MODERATELY_ACTIVE' | 'VERY_ACTIVE' | 'EXTREMELY_ACTIVE';
+          notes?: string;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          first_name?: string;
+          last_name?: string;
+          birth_date?: string;
+          sex?: 'M' | 'F';
+          weight?: number;
+          height?: number;
+          pathologies?: string[];
+          food_allergies?: string[];
+          objective?: 'WEIGHT_LOSS' | 'MAINTENANCE' | 'MUSCLE_GAIN' | 'PREGNANCY' | 'OTHER';
+          activity_level?: 'SEDENTARY' | 'LIGHTLY_ACTIVE' | 'MODERATELY_ACTIVE' | 'VERY_ACTIVE' | 'EXTREMELY_ACTIVE';
+          notes?: string;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
+      tmb_calculations: {
+        Row: {
+          id: string;
+          patient_id: string;
+          current_weight: number;
+          height: number;
+          age: number;
+          sex: 'M' | 'F';
+          activity_level: string;
+          activity_factor: number;
+          objective: string;
+          current_bmi: number;
+          target_bmi: number;
+          healthy_weight: number;
+          tmb: number;
+          tdee: number;
+          caloric_restriction: number;
+          target_calories: number;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          patient_id: string;
+          current_weight: number;
+          height: number;
+          age: number;
+          sex: 'M' | 'F';
+          activity_level: string;
+          activity_factor: number;
+          objective: string;
+          current_bmi: number;
+          target_bmi: number;
+          healthy_weight: number;
+          tmb: number;
+          tdee: number;
+          caloric_restriction: number;
+          target_calories: number;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          patient_id?: string;
+          current_weight?: number;
+          height?: number;
+          age?: number;
+          sex?: 'M' | 'F';
+          activity_level?: string;
+          activity_factor?: number;
+          objective?: string;
+          current_bmi?: number;
+          target_bmi?: number;
+          healthy_weight?: number;
+          tmb?: number;
+          tdee?: number;
+          caloric_restriction?: number;
+          target_calories?: number;
+          created_at?: string;
+        };
+        Relationships: [];
+      };
+      formula_sessions: {
+        Row: {
+          id: string;
+          patient_id: string;
+          tmb_calculation_id: string;
+          target_calories: number;
+          exchanges: { subgroupId: string; exchanges: number }[];
+          total_protein: number;
+          total_fat: number;
+          total_carbs: number;
+          protein_kcal: number;
+          fat_kcal: number;
+          carbs_kcal: number;
+          total_kcal: number;
+          protein_percent: number;
+          fat_percent: number;
+          carbs_percent: number;
+          adequacy_percent: number;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          patient_id: string;
+          tmb_calculation_id: string;
+          target_calories: number;
+          exchanges: { subgroupId: string; exchanges: number }[];
+          total_protein: number;
+          total_fat: number;
+          total_carbs: number;
+          protein_kcal: number;
+          fat_kcal: number;
+          carbs_kcal: number;
+          total_kcal: number;
+          protein_percent: number;
+          fat_percent: number;
+          carbs_percent: number;
+          adequacy_percent: number;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          patient_id?: string;
+          tmb_calculation_id?: string;
+          target_calories?: number;
+          exchanges?: { subgroupId: string; exchanges: number }[];
+          total_protein?: number;
+          total_fat?: number;
+          total_carbs?: number;
+          protein_kcal?: number;
+          fat_kcal?: number;
+          carbs_kcal?: number;
+          total_kcal?: number;
+          protein_percent?: number;
+          fat_percent?: number;
+          carbs_percent?: number;
+          adequacy_percent?: number;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
+    };
+    Views: {
+      report_view: {
+        Row: {
+          formula_id: string;
+          formula_date: string;
+          patient_id: string;
+          patient_name: string;
+          patient_sex: 'M' | 'F';
+          patient_age: number;
+          objective: string;
+          current_weight: number;
+          healthy_weight: number;
+          current_bmi: number;
+          target_bmi: number;
+          target_calories: number;
+          total_kcal: number;
+          adequacy_percent: number;
+          protein_percent: number;
+          fat_percent: number;
+          carbs_percent: number;
+          tmb_calculation_id: string;
+          exchanges: { subgroupId: string; exchanges: number }[];
+        };
+        Relationships: [];
+      };
+    };
+    Functions: Record<string, never>;
+    Enums: {
+      patient_objective: 'WEIGHT_LOSS' | 'MAINTENANCE' | 'MUSCLE_GAIN' | 'PREGNANCY' | 'OTHER';
+      activity_level: 'SEDENTARY' | 'LIGHTLY_ACTIVE' | 'MODERATELY_ACTIVE' | 'VERY_ACTIVE' | 'EXTREMELY_ACTIVE';
+      sex_type: 'M' | 'F';
+    };
+    CompositeTypes: Record<string, never>;
+  };
+};
+
+// Convenience aliases for service-layer converters
+export type DbPatient = Database['hippos']['Tables']['patients']['Row'];
+export type DbTmbCalculation = Database['hippos']['Tables']['tmb_calculations']['Row'];
+export type DbFormulaSession = Database['hippos']['Tables']['formula_sessions']['Row'];
+export type DbReportRow = Database['hippos']['Views']['report_view']['Row'];

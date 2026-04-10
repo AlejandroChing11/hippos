@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from 'react';
 import type { ActivityLevel, Patient } from '@/lib/types/patient';
-import type { TmbCalculation } from '@/lib/types/tmb';
+import type { TmbCalculationInput } from '@/lib/supabase/tmb-calculations';
 import { Card } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { Badge } from '@/components/ui/Badge';
@@ -12,14 +12,13 @@ import { RestrictionInput } from './RestrictionInput';
 import { TmbResult } from './TmbResult';
 import { calculateTMB, calculateTDEE, calculateTargetCalories } from '@/lib/utils/mifflin';
 import { calculateBMI, calculateWeightFromBMI, getBmiCategory } from '@/lib/utils/bmi';
-import { generateId } from '@/lib/utils/slug';
 import { formatNumber } from '@/lib/utils/format';
 import { ACTIVITY_FACTORS } from '@/lib/constants/activity-factors';
 import { OBJECTIVES } from '@/lib/constants/objectives';
 
 interface TmbCalculatorProps {
   patient: Patient;
-  onSave: (calc: TmbCalculation) => void;
+  onSave: (data: TmbCalculationInput) => void;
 }
 
 function ReadOnlyField({ label, value }: { label: string; value: string }) {
@@ -43,31 +42,22 @@ export function TmbCalculator({ patient, onSave }: TmbCalculatorProps) {
   const [activityLevel, setActivityLevel] = useState<ActivityLevel>(patient.activityLevel);
 
   const activityInfo = ACTIVITY_FACTORS[activityLevel];
-
   const effectiveTargetBmi = Math.min(24.9, Math.max(18.5, targetBmi));
 
   const currentBmi = useMemo(() => calculateBMI(currentWeight, height), [currentWeight, height]);
   const bmiCategory = useMemo(() => getBmiCategory(currentBmi), [currentBmi]);
-  const healthyWeight = useMemo(
-    () => calculateWeightFromBMI(effectiveTargetBmi, height),
-    [effectiveTargetBmi, height],
-  );
+  const healthyWeight = useMemo(() => calculateWeightFromBMI(effectiveTargetBmi, height), [effectiveTargetBmi, height]);
   const weightDiff = useMemo(() => currentWeight - healthyWeight, [currentWeight, healthyWeight]);
 
-  const tmb = useMemo(
-    () => calculateTMB(healthyWeight, height, age, sex),
-    [healthyWeight, height, age, sex],
-  );
+  const tmb = useMemo(() => calculateTMB(healthyWeight, height, age, sex), [healthyWeight, height, age, sex]);
   const tdee = useMemo(() => calculateTDEE(tmb, activityInfo.factor), [tmb, activityInfo.factor]);
   const targetCalories = useMemo(() => calculateTargetCalories(tdee, restriction), [tdee, restriction]);
 
   const canSave = !requiresRestriction || restriction > 0;
-
   const targetBmiInvalid = targetBmi < 18.5 || targetBmi > 24.9;
 
   function handleSave() {
-    const calc: TmbCalculation = {
-      id: generateId(),
+    onSave({
       patientId: patient.id,
       currentWeight,
       height,
@@ -83,9 +73,7 @@ export function TmbCalculator({ patient, onSave }: TmbCalculatorProps) {
       tdee,
       caloricRestriction: restriction,
       targetCalories,
-      createdAt: new Date().toISOString(),
-    };
-    onSave(calc);
+    });
   }
 
   return (
@@ -147,12 +135,7 @@ export function TmbCalculator({ patient, onSave }: TmbCalculatorProps) {
       <div className="space-y-4">
         <h3 className="font-heading text-lg font-semibold text-ink">Cálculo energético</h3>
         <div className="max-w-md">
-          <Select
-            label="Factor de actividad"
-            options={activityOptions}
-            value={activityLevel}
-            onChange={(e) => setActivityLevel(e.target.value as ActivityLevel)}
-          />
+          <Select label="Factor de actividad" options={activityOptions} value={activityLevel} onChange={(e) => setActivityLevel(e.target.value as ActivityLevel)} />
         </div>
 
         <TmbResult
@@ -172,9 +155,7 @@ export function TmbCalculator({ patient, onSave }: TmbCalculatorProps) {
             <div className="max-w-xs">
               <RestrictionInput value={restriction} onChange={setRestriction} required={requiresRestriction} />
               {requiresRestriction && restriction === 0 && (
-                <p className="mt-2 text-xs text-warning">
-                  El objetivo de pérdida de peso requiere una restricción calórica.
-                </p>
+                <p className="mt-2 text-xs text-warning">El objetivo de pérdida de peso requiere una restricción calórica.</p>
               )}
             </div>
           </div>

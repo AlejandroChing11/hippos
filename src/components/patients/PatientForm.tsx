@@ -2,17 +2,18 @@
 
 import { useState, type FormEvent } from 'react';
 import type { Patient, PatientObjective, ActivityLevel } from '@/lib/types/patient';
+import type { PatientFormData } from '@/lib/hooks/usePatients';
 import { Input } from '@/components/ui/Input';
 import { Select } from '@/components/ui/Select';
 import { TagInput } from '@/components/ui/TagInput';
 import { Button } from '@/components/ui/Button';
-import { generateId, calculateAge } from '@/lib/utils/slug';
+import { calculateAge } from '@/lib/utils/slug';
 import { ACTIVITY_FACTORS } from '@/lib/constants/activity-factors';
 import { OBJECTIVES } from '@/lib/constants/objectives';
 
 interface PatientFormProps {
   patient?: Patient;
-  onSave: (patient: Patient) => void;
+  onSave: (data: PatientFormData) => Promise<void>;
   onCancel: () => void;
 }
 
@@ -42,6 +43,7 @@ export function PatientForm({ patient, onSave, onCancel }: PatientFormProps) {
   const [foodAllergies, setFoodAllergies] = useState<string[]>(patient?.foodAllergies ?? []);
   const [notes, setNotes] = useState(patient?.notes ?? '');
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [isSaving, setIsSaving] = useState(false);
 
   const computedAge = birthDate ? calculateAge(birthDate) : null;
 
@@ -61,136 +63,63 @@ export function PatientForm({ patient, onSave, onCancel }: PatientFormProps) {
     return Object.keys(e).length === 0;
   }
 
-  function handleSubmit(e: FormEvent) {
+  async function handleSubmit(e: FormEvent) {
     e.preventDefault();
     if (!validate()) return;
 
-    const now = new Date().toISOString();
-    const fullName = `${firstName.trim()} ${lastName.trim()}`;
-
-    onSave({
-      id: patient?.id ?? generateId(),
-      firstName: firstName.trim(),
-      lastName: lastName.trim(),
-      fullName,
-      birthDate,
-      age: calculateAge(birthDate),
-      sex: sex as 'M' | 'F',
-      weight: parseFloat(weight),
-      height: parseFloat(height),
-      pathologies,
-      foodAllergies,
-      objective: objective as PatientObjective,
-      activityLevel: activityLevel as ActivityLevel,
-      notes: notes.trim(),
-      createdAt: patient?.createdAt ?? now,
-      updatedAt: now,
-    });
+    setIsSaving(true);
+    try {
+      await onSave({
+        firstName: firstName.trim(),
+        lastName: lastName.trim(),
+        birthDate,
+        sex: sex as 'M' | 'F',
+        weight: parseFloat(weight),
+        height: parseFloat(height),
+        pathologies,
+        foodAllergies,
+        objective: objective as PatientObjective,
+        activityLevel: activityLevel as ActivityLevel,
+        notes: notes.trim(),
+      });
+    } catch (err) {
+      setErrors({ form: err instanceof Error ? err.message : 'Error al guardar' });
+    } finally {
+      setIsSaving(false);
+    }
   }
 
   return (
     <form onSubmit={handleSubmit} className="space-y-5">
+      {errors.form && (
+        <p className="rounded-lg bg-danger-light px-4 py-2 text-sm text-danger">{errors.form}</p>
+      )}
+
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <Input
-          label="Nombre"
-          value={firstName}
-          onChange={e => setFirstName(e.target.value)}
-          error={errors.firstName}
-          required
-        />
-        <Input
-          label="Apellido"
-          value={lastName}
-          onChange={e => setLastName(e.target.value)}
-          error={errors.lastName}
-          required
-        />
+        <Input label="Nombre" value={firstName} onChange={e => setFirstName(e.target.value)} error={errors.firstName} required />
+        <Input label="Apellido" value={lastName} onChange={e => setLastName(e.target.value)} error={errors.lastName} required />
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div className="space-y-1">
-          <Input
-            label="Fecha de nacimiento"
-            type="date"
-            value={birthDate}
-            onChange={e => setBirthDate(e.target.value)}
-            error={errors.birthDate}
-            required
-          />
-          {computedAge !== null && (
-            <p className="text-xs text-ink-tertiary">{computedAge} años</p>
-          )}
+          <Input label="Fecha de nacimiento" type="date" value={birthDate} onChange={e => setBirthDate(e.target.value)} error={errors.birthDate} required />
+          {computedAge !== null && <p className="text-xs text-ink-tertiary">{computedAge} años</p>}
         </div>
-        <Select
-          label="Sexo"
-          options={sexOptions}
-          value={sex}
-          onChange={e => setSex(e.target.value as 'M' | 'F')}
-          placeholder="Seleccionar"
-          error={errors.sex}
-          required
-        />
+        <Select label="Sexo" options={sexOptions} value={sex} onChange={e => setSex(e.target.value as 'M' | 'F')} placeholder="Seleccionar" error={errors.sex} required />
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <Input
-          label="Peso (kg)"
-          type="number"
-          min={20}
-          max={300}
-          step={0.1}
-          value={weight}
-          onChange={e => setWeight(e.target.value)}
-          error={errors.weight}
-          required
-        />
-        <Input
-          label="Talla (cm)"
-          type="number"
-          min={80}
-          max={250}
-          step={0.1}
-          value={height}
-          onChange={e => setHeight(e.target.value)}
-          error={errors.height}
-          required
-        />
+        <Input label="Peso (kg)" type="number" min={20} max={300} step={0.1} value={weight} onChange={e => setWeight(e.target.value)} error={errors.weight} required />
+        <Input label="Talla (cm)" type="number" min={80} max={250} step={0.1} value={height} onChange={e => setHeight(e.target.value)} error={errors.height} required />
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <Select
-          label="Nivel de actividad"
-          options={activityOptions}
-          value={activityLevel}
-          onChange={e => setActivityLevel(e.target.value as ActivityLevel)}
-          placeholder="Seleccionar"
-          error={errors.activityLevel}
-          required
-        />
-        <Select
-          label="Objetivo"
-          options={objectiveOptions}
-          value={objective}
-          onChange={e => setObjective(e.target.value as PatientObjective)}
-          placeholder="Seleccionar"
-          error={errors.objective}
-          required
-        />
+        <Select label="Nivel de actividad" options={activityOptions} value={activityLevel} onChange={e => setActivityLevel(e.target.value as ActivityLevel)} placeholder="Seleccionar" error={errors.activityLevel} required />
+        <Select label="Objetivo" options={objectiveOptions} value={objective} onChange={e => setObjective(e.target.value as PatientObjective)} placeholder="Seleccionar" error={errors.objective} required />
       </div>
 
-      <TagInput
-        label="Patologías"
-        tags={pathologies}
-        onChange={setPathologies}
-        placeholder="Escribir patología y Enter"
-      />
-
-      <TagInput
-        label="Alergias alimentarias"
-        tags={foodAllergies}
-        onChange={setFoodAllergies}
-        placeholder="Escribir alergia y Enter"
-      />
+      <TagInput label="Patologías" tags={pathologies} onChange={setPathologies} placeholder="Escribir patología y Enter" />
+      <TagInput label="Alergias alimentarias" tags={foodAllergies} onChange={setFoodAllergies} placeholder="Escribir alergia y Enter" />
 
       <div className="space-y-1">
         <label className="block text-sm font-medium text-ink-secondary">Notas</label>
@@ -204,11 +133,9 @@ export function PatientForm({ patient, onSave, onCancel }: PatientFormProps) {
       </div>
 
       <div className="flex justify-end gap-3 pt-2">
-        <Button type="button" variant="ghost" onClick={onCancel}>
-          Cancelar
-        </Button>
-        <Button type="submit">
-          {patient ? 'Guardar cambios' : 'Crear paciente'}
+        <Button type="button" variant="ghost" onClick={onCancel} disabled={isSaving}>Cancelar</Button>
+        <Button type="submit" disabled={isSaving}>
+          {isSaving ? 'Guardando...' : patient ? 'Guardar cambios' : 'Crear paciente'}
         </Button>
       </div>
     </form>

@@ -14,11 +14,12 @@ interface ReportFiltersProps {
 }
 
 const PRESETS: { value: DateRangePreset; label: string }[] = [
-  { value: 'today', label: 'Hoy' },
-  { value: 'this_week', label: 'Esta semana' },
+  { value: 'all_time', label: 'Todo el historial' },
   { value: 'this_month', label: 'Este mes' },
-  { value: 'last_week', label: 'Semana pasada' },
+  { value: 'this_week', label: 'Esta semana' },
+  { value: 'today', label: 'Hoy' },
   { value: 'last_month', label: 'Mes pasado' },
+  { value: 'last_week', label: 'Semana pasada' },
   { value: 'custom', label: 'Personalizado' },
 ];
 

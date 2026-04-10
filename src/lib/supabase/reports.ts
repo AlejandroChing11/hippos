@@ -41,17 +41,31 @@ function toReportRow(row: DbReportRow): ReportRow {
 
 // ─── Query ──────────────────────────────────────────────────
 
+// Convert a local "YYYY-MM-DD" date string to a UTC ISO timestamp
+// at the corresponding local boundary (midnight or end-of-day).
+// Without 'Z', `new Date('2026-04-09T00:00:00')` is parsed as
+// local time → .toISOString() converts to the correct UTC instant.
+function localStartOfDay(dateStr: string): string {
+  return new Date(dateStr + 'T00:00:00').toISOString();
+}
+function localEndOfDay(dateStr: string): string {
+  return new Date(dateStr + 'T23:59:59.999').toISOString();
+}
+
 export async function getReportData(filters: {
   startDate: string;
   endDate: string;
   patientId?: string | null;
   objective?: string | null;
 }): Promise<ReportRow[]> {
+  const startUtc = localStartOfDay(filters.startDate);
+  const endUtc = localEndOfDay(filters.endDate);
+
   let query = supabase
     .from('report_view')
     .select('*')
-    .gte('formula_date', filters.startDate)
-    .lte('formula_date', filters.endDate + 'T23:59:59.999Z')
+    .gte('formula_date', startUtc)
+    .lte('formula_date', endUtc)
     .order('formula_date', { ascending: false });
 
   if (filters.patientId) {

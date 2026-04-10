@@ -55,6 +55,9 @@ export function resolveDateRange(preset: DateRangePreset, customStart: string, c
     case 'custom':
       return { startDate: customStart, endDate: customEnd };
 
+    case 'all_time':
+      return { startDate: '2000-01-01', endDate: toISODate(today) };
+
     default:
       return { startDate: toISODate(today), endDate: toISODate(today) };
   }

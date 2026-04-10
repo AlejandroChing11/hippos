@@ -1,6 +1,6 @@
 import type { PatientObjective } from './patient';
 
-export type DateRangePreset = 'today' | 'this_week' | 'this_month' | 'last_week' | 'last_month' | 'custom';
+export type DateRangePreset = 'today' | 'this_week' | 'this_month' | 'last_week' | 'last_month' | 'custom' | 'all_time';
 
 export interface ReportFiltersState {
   preset: DateRangePreset;

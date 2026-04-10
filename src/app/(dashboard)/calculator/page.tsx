@@ -9,7 +9,8 @@ import { Select } from '@/components/ui/Select';
 import { Button } from '@/components/ui/Button';
 import { Table, type Column } from '@/components/ui/Table';
 import { TmbCalculator } from '@/components/tmb/TmbCalculator';
-import { formatDate, formatKcal } from '@/lib/utils/format';
+import { formatDate, formatKcal, formatNumber } from '@/lib/utils/format';
+import { normalizeTmbCalculation } from '@/lib/utils/tmb-migrate';
 
 function CalculatorContent() {
   const router = useRouter();
@@ -23,13 +24,12 @@ function CalculatorContent() {
   const activePatientId = patientIdFromUrl ?? selectedId;
   const patient = useMemo(() => patients.find((p) => p.id === activePatientId), [patients, activePatientId]);
 
-  const patientHistory = useMemo(
-    () =>
-      calculations
-        .filter((c) => c.patientId === activePatientId)
-        .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()),
-    [calculations, activePatientId],
-  );
+  const patientHistory = useMemo(() => {
+    const rows = calculations
+      .filter((c) => c.patientId === activePatientId)
+      .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+    return rows.map((c) => normalizeTmbCalculation(c as Parameters<typeof normalizeTmbCalculation>[0]));
+  }, [calculations, activePatientId]);
 
   const patientOptions = useMemo(
     () => patients.map((p) => ({ value: p.id, label: p.fullName })),
@@ -47,7 +47,10 @@ function CalculatorContent() {
   const columns: Column<TmbCalculation>[] = useMemo(
     () => [
       { key: 'createdAt', header: 'Fecha', render: (c) => formatDate(c.createdAt) },
-      { key: 'weight', header: 'Peso', render: (c) => `${c.weight} kg` },
+      { key: 'currentWeight', header: 'Peso actual', render: (c) => `${formatNumber(c.currentWeight, 1)} kg`, className: 'whitespace-nowrap' },
+      { key: 'currentBmi', header: 'IMC actual', render: (c) => formatNumber(c.currentBmi, 1), className: 'whitespace-nowrap' },
+      { key: 'targetBmi', header: 'IMC saludable', render: (c) => formatNumber(c.targetBmi, 1), className: 'whitespace-nowrap' },
+      { key: 'healthyWeight', header: 'Peso saludable', render: (c) => `${formatNumber(c.healthyWeight, 1)} kg`, className: 'whitespace-nowrap' },
       { key: 'tmb', header: 'TMB', render: (c) => formatKcal(c.tmb) },
       { key: 'tdee', header: 'TDEE', render: (c) => formatKcal(c.tdee) },
       { key: 'caloricRestriction', header: 'Restricción', render: (c) => (c.caloricRestriction > 0 ? `−${formatKcal(c.caloricRestriction)}` : '—') },
@@ -88,7 +91,7 @@ function CalculatorContent() {
 
       {patient ? (
         <>
-          <TmbCalculator patient={patient} onSave={handleSave} />
+          <TmbCalculator key={patient.id} patient={patient} onSave={handleSave} />
 
           {patientHistory.length > 0 && (
             <div className="space-y-3">

@@ -36,14 +36,14 @@ function getMacroBarColor(macro: 'protein' | 'fat' | 'carbs', percent: number): 
 function MacroBar({ config }: { config: MacroBarConfig }) {
   const clampedPercent = Math.min(config.percent, 100);
   return (
-    <div className="space-y-1.5">
-      <div className="flex items-center justify-between text-sm">
-        <span className="font-medium text-ink">{config.label}</span>
-        <span className="text-ink-secondary tabular-nums">
+    <div className="space-y-1.5 min-w-0">
+      <div className="flex flex-col gap-1 sm:flex-row sm:items-start sm:justify-between sm:gap-3 text-sm min-w-0">
+        <span className="font-medium text-ink shrink-0">{config.label}</span>
+        <span className="text-ink-secondary tabular-nums text-xs sm:text-sm break-words sm:text-right min-w-0">
           {formatNumber(config.grams)}g · {formatKcal(config.kcal)} · {formatPercent(config.percent)}
         </span>
       </div>
-      <div className="h-2.5 w-full bg-inset rounded-lg overflow-hidden">
+      <div className="h-2.5 w-full min-w-[120px] bg-inset rounded-lg overflow-hidden">
         <div
           className={`h-full rounded-lg transition-all duration-300 ${config.barColor}`}
           style={{ width: `${clampedPercent}%` }}
@@ -85,38 +85,42 @@ export function MacroSummary({ targetCalories, totals, adequacyPercent }: MacroS
   );
 
   return (
-    <Card className="space-y-5">
+    <Card className="space-y-5 min-w-0">
       <h3 className="font-heading font-semibold text-ink text-lg">Resumen Nutricional</h3>
 
-      <div className="grid grid-cols-2 gap-3">
-        <div className="bg-inset rounded-lg p-3 space-y-0.5">
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
+        <div className="bg-inset rounded-lg p-3 space-y-0.5 min-w-0">
           <p className="text-xs text-ink-tertiary">Requerimiento</p>
-          <p className="text-lg font-semibold text-ink tabular-nums">{formatKcal(targetCalories)}</p>
+          <p className="text-lg font-semibold text-ink tabular-nums break-all">{formatKcal(targetCalories)}</p>
         </div>
-        <div className="bg-inset rounded-lg p-3 space-y-0.5">
+        <div className="bg-inset rounded-lg p-3 space-y-0.5 min-w-0">
           <p className="text-xs text-ink-tertiary">Total actual</p>
-          <p className="text-lg font-semibold text-ink tabular-nums">{formatKcal(totals.totalKcal)}</p>
+          <p className="text-lg font-semibold text-ink tabular-nums break-all">{formatKcal(totals.totalKcal)}</p>
         </div>
-        <div className="bg-inset rounded-lg p-3 space-y-0.5">
+        <div className="bg-inset rounded-lg p-3 space-y-0.5 min-w-0">
           <p className="text-xs text-ink-tertiary">Diferencia</p>
-          <p className={`text-lg font-semibold tabular-nums ${Math.abs(diff) <= targetCalories * 0.1 ? 'text-success' : 'text-danger'}`}>
+          <p className={`text-lg font-semibold tabular-nums break-all ${Math.abs(diff) <= targetCalories * 0.1 ? 'text-success' : 'text-danger'}`}>
             {diff >= 0 ? '+' : ''}{Math.round(diff)} kcal
           </p>
         </div>
-        <div className="bg-inset rounded-lg p-3 space-y-0.5">
+        <div className="bg-inset rounded-lg p-3 min-w-0 space-y-2">
           <p className="text-xs text-ink-tertiary">% Adecuación</p>
-          <div className="flex items-center gap-2">
-            <span className="text-lg font-semibold text-ink tabular-nums">{formatPercent(adequacyPercent)}</span>
-            <Badge variant={status.variant}>{status.label}</Badge>
+          <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:flex-wrap">
+            <span className="text-lg font-semibold text-ink tabular-nums shrink-0">{formatPercent(adequacyPercent)}</span>
+            <Badge variant={status.variant}>
+              <span className="whitespace-nowrap">{status.label}</span>
+            </Badge>
           </div>
         </div>
       </div>
 
       <div className="space-y-3 pt-1">
         <p className="text-xs font-medium text-ink-tertiary uppercase tracking-wider">Distribución de macros</p>
-        {macroBars.map((config) => (
-          <MacroBar key={config.label} config={config} />
-        ))}
+        <div className="flex flex-col gap-4">
+          {macroBars.map((config) => (
+            <MacroBar key={config.label} config={config} />
+          ))}
+        </div>
       </div>
     </Card>
   );

@@ -78,7 +78,7 @@ export function FormulaTable({ exchanges, onChange }: FormulaTableProps) {
   );
 
   return (
-    <div className="overflow-x-auto rounded-xl border border-border">
+    <div className="overflow-x-auto rounded-xl border border-border bg-surface shadow-xs">
       <table className="w-full text-sm">
         <thead>
           <tr className="bg-inset text-ink-secondary">
@@ -119,7 +119,7 @@ export function FormulaTable({ exchanges, onChange }: FormulaTableProps) {
                     const v = e.target.value;
                     handleChange(row.subgroup.id, v === '' ? 0 : Math.max(0, parseFloat(v) || 0));
                   }}
-                  className="w-[72px] px-2 py-1 text-right text-sm bg-inset border border-border rounded-lg focus:outline-none focus:border-sage focus:ring-1 focus:ring-sage tabular-nums"
+                  className="w-[72px] px-2 py-1 text-right text-sm bg-inset border border-border rounded-lg focus:outline-none focus-visible:border-sage focus-visible:ring-2 focus-visible:ring-sage/30 tabular-nums"
                 />
               </td>
               <td className="px-3 py-2 text-right tabular-nums text-ink-secondary">

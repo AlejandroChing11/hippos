@@ -1,6 +1,6 @@
 'use client';
 
-import { Suspense, useState, useMemo, useCallback } from 'react';
+import { Suspense, useState, useMemo, useCallback, useRef, useEffect } from 'react';
 import { useSearchParams } from 'next/navigation';
 import type { Patient } from '@/lib/types/patient';
 import type { TmbCalculation } from '@/lib/types/tmb';
@@ -11,6 +11,7 @@ import { formatKcal, formatDate } from '@/lib/utils/format';
 import { generateId } from '@/lib/utils/slug';
 import { FormulaTable } from '@/components/formula/FormulaTable';
 import { MacroSummary } from '@/components/formula/MacroSummary';
+import { ExchangeSummary } from '@/components/formula/ExchangeSummary';
 import { CalorieGauge } from '@/components/formula/CalorieGauge';
 import { Button } from '@/components/ui/Button';
 import { Select } from '@/components/ui/Select';
@@ -19,6 +20,7 @@ import type { SelectOption } from '@/components/ui/Select';
 function FormulaContent() {
   const searchParams = useSearchParams();
   const paramTmbId = searchParams.get('tmbCalculationId');
+  const saveMsgRef = useRef<HTMLParagraphElement>(null);
 
   const [patients] = useSessionStorage<Patient[]>('hippos_patients', []);
   const [tmbCalcs] = useSessionStorage<TmbCalculation[]>('hippos_tmb_calculations', []);
@@ -35,17 +37,23 @@ function FormulaContent() {
 
   const [selectedPatientId, setSelectedPatientId] = useState<string>(linkedPatient?.id ?? '');
   const [selectedTmbId, setSelectedTmbId] = useState<string>(linkedTmb?.id ?? '');
+  const [saveMessage, setSaveMessage] = useState<string | null>(null);
 
-  const activePatientId = linkedPatient?.id ?? selectedPatientId;
   const activeTmbId = linkedTmb?.id ?? selectedTmbId;
+
+  const activeTmb = useMemo(
+    () => tmbCalcs.find(t => t.id === activeTmbId),
+    [tmbCalcs, activeTmbId],
+  );
+
+  const activePatientId = useMemo(
+    () => activeTmb?.patientId ?? linkedPatient?.id ?? selectedPatientId,
+    [activeTmb, linkedPatient, selectedPatientId],
+  );
 
   const activePatient = useMemo(
     () => patients.find(p => p.id === activePatientId),
     [patients, activePatientId],
-  );
-  const activeTmb = useMemo(
-    () => tmbCalcs.find(t => t.id === activeTmbId),
-    [tmbCalcs, activeTmbId],
   );
 
   const patientTmbs = useMemo(
@@ -102,6 +110,12 @@ function FormulaContent() {
     [sessions],
   );
 
+  useEffect(() => {
+    if (!saveMessage) return;
+    const t = window.setTimeout(() => setSaveMessage(null), 5000);
+    return () => window.clearTimeout(t);
+  }, [saveMessage]);
+
   const handleSave = useCallback(() => {
     if (!activeTmbId || !activePatientId) return;
     const now = new Date().toISOString();
@@ -125,6 +139,8 @@ function FormulaContent() {
       }
       return [...prev, session];
     });
+    setSaveMessage('Plan guardado. Puedes continuar desde Pacientes o ajustar la fórmula.');
+    queueMicrotask(() => saveMsgRef.current?.focus());
   }, [activeTmbId, activePatientId, targetCalories, exchanges, totals, adequacyPercent, existingSession, setSessions]);
 
   const handleReset = useCallback(() => {
@@ -146,17 +162,25 @@ function FormulaContent() {
       updatedAt: now,
     };
     setSessions(prev => [...prev, dup]);
+    setSaveMessage('Copia del plan guardada en el historial de sesiones.');
   }, [activeTmbId, activePatientId, targetCalories, exchanges, totals, adequacyPercent, setSessions]);
 
   const hasAllergies = activePatient && activePatient.foodAllergies.length > 0;
   const isReady = !!activeTmb;
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-heading font-bold text-ink">Fórmula Desarrollada</h1>
+    <div className="mx-auto flex w-full max-w-[1400px] flex-col gap-8 pb-12 touch-manipulation">
+      <header className="flex flex-col gap-4 border-b border-border/80 pb-6 sm:flex-row sm:items-start sm:justify-between">
+        <div className="min-w-0 space-y-1">
+          <h1 className="font-heading text-2xl font-bold text-balance text-ink md:text-3xl">
+            Fórmula desarrollada
+          </h1>
+          <p className="text-pretty text-sm text-ink-secondary">
+            Asigna intercambios y revisa el adecuación respecto al requerimiento calórico del cálculo TMB.
+          </p>
+        </div>
         {isReady && (
-          <div className="flex items-center gap-2">
+          <div className="flex shrink-0 flex-wrap items-center gap-2 sm:justify-end">
             <Button variant="ghost" size="sm" onClick={handleReset}>
               Resetear intercambios
             </Button>
@@ -168,10 +192,22 @@ function FormulaContent() {
             </Button>
           </div>
         )}
+      </header>
+
+      <div
+        aria-live="polite"
+        className="min-h-5 text-sm text-sage"
+        role="status"
+      >
+        {saveMessage ? (
+          <p ref={saveMsgRef} tabIndex={-1} className="rounded-lg border border-sage/30 bg-sage-light/80 px-4 py-3 text-ink outline-none">
+            {saveMessage}
+          </p>
+        ) : null}
       </div>
 
       {!linkedTmb && (
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
           <Select
             label="Paciente"
             options={patientOptions}
@@ -191,54 +227,67 @@ function FormulaContent() {
       )}
 
       {linkedTmb && linkedPatient && (
-        <div className="flex items-center gap-3 text-sm text-ink-secondary bg-surface-hover rounded-lg px-4 py-2.5">
+        <div className="flex flex-wrap items-center gap-2 rounded-xl border border-border bg-surface px-4 py-3 text-sm text-ink-secondary shadow-xs">
           <span className="font-medium text-ink">{linkedPatient.fullName}</span>
-          <span className="text-ink-muted">·</span>
+          <span className="text-ink-muted" aria-hidden>
+            ·
+          </span>
           <span>{formatKcal(linkedTmb.targetCalories)} objetivo</span>
         </div>
       )}
 
       {hasAllergies && (
-        <div className="flex items-start gap-3 bg-warning-light border border-warning/20 rounded-lg px-4 py-3">
-          <svg className="w-5 h-5 text-warning shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+        <div className="flex items-start gap-3 rounded-xl border border-warning/25 bg-warning-light px-4 py-3">
+          <svg className="mt-0.5 h-5 w-5 shrink-0 text-warning" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2} aria-hidden>
             <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
           </svg>
           <div>
             <p className="text-sm font-medium text-warning">Alergias alimentarias</p>
-            <p className="text-sm text-ink-secondary mt-0.5">
-              {activePatient!.foodAllergies.join(', ')}
-            </p>
+            <p className="mt-0.5 text-sm text-ink-secondary">{activePatient!.foodAllergies.join(', ')}</p>
           </div>
         </div>
       )}
 
       {isReady ? (
-        <div className="flex flex-col lg:flex-row gap-6">
-          <div className="lg:w-[70%] min-w-0">
-            <FormulaTable exchanges={exchanges} onChange={setExchanges} />
+        <>
+          <div className="flex flex-col gap-10 xl:flex-row xl:items-start xl:gap-12">
+            <section className="min-w-0 flex-1 space-y-4" aria-labelledby="formula-table-heading">
+              <h2 id="formula-table-heading" className="font-heading text-lg font-semibold text-ink">
+                Intercambios por subgrupo
+              </h2>
+              <FormulaTable exchanges={exchanges} onChange={setExchanges} />
+            </section>
+
+            <aside className="flex w-full min-w-0 flex-col gap-6 xl:w-[min(100%,400px)] xl:shrink-0" aria-label="Resumen nutricional y calorías">
+              <CalorieGauge
+                target={targetCalories}
+                actual={totals.totalKcal}
+                adequacyPercent={adequacyPercent}
+              />
+              <MacroSummary
+                targetCalories={targetCalories}
+                totals={totals}
+                adequacyPercent={adequacyPercent}
+              />
+            </aside>
           </div>
-          <div className="lg:w-[30%] space-y-4">
-            <CalorieGauge
-              target={targetCalories}
-              actual={totals.totalKcal}
-              adequacyPercent={adequacyPercent}
-            />
-            <MacroSummary
-              targetCalories={targetCalories}
-              totals={totals}
-              adequacyPercent={adequacyPercent}
-            />
-          </div>
-        </div>
+
+          <section className="space-y-4" aria-labelledby="exchange-summary-heading">
+            <h2 id="exchange-summary-heading" className="font-heading text-lg font-semibold text-ink">
+              Resumen por grupos clínicos
+            </h2>
+            <ExchangeSummary exchanges={exchanges} />
+          </section>
+        </>
       ) : (
-        <div className="flex flex-col items-center justify-center py-20 text-center">
-          <div className="w-16 h-16 rounded-full bg-inset flex items-center justify-center mb-4">
-            <svg className="w-7 h-7 text-ink-muted" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+        <div className="flex flex-col items-center justify-center rounded-xl border border-dashed border-border bg-surface/50 py-20 text-center">
+          <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-inset">
+            <svg className="h-7 w-7 text-ink-muted" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5} aria-hidden>
               <path strokeLinecap="round" strokeLinejoin="round" d="M9 12h3.75M9 15h3.75M9 18h3.75m3 .75H18a2.25 2.25 0 002.25-2.25V6.108c0-1.135-.845-2.098-1.976-2.192a48.424 48.424 0 00-1.123-.08m-5.801 0c-.065.21-.1.433-.1.664 0 .414.336.75.75.75h4.5a.75.75 0 00.75-.75 2.25 2.25 0 00-.1-.664m-5.8 0A2.251 2.251 0 0113.5 2.25H15a2.25 2.25 0 012.15 1.586m-5.8 0c-.376.023-.75.05-1.124.08C9.095 4.01 8.25 4.973 8.25 6.108V19.5a2.25 2.25 0 002.25 2.25h.75" />
             </svg>
           </div>
-          <p className="text-ink-secondary text-sm">
-            Selecciona un paciente y un cálculo TMB para comenzar.
+          <p className="max-w-sm text-pretty text-sm text-ink-secondary">
+            Selecciona un paciente y un cálculo TMB para comenzar a armar la fórmula.
           </p>
         </div>
       )}
@@ -248,7 +297,7 @@ function FormulaContent() {
 
 export default function FormulaPage() {
   return (
-    <Suspense fallback={<div className="text-ink-tertiary text-sm py-12 text-center">Cargando…</div>}>
+    <Suspense fallback={<div className="py-12 text-center text-sm text-ink-tertiary">Cargando…</div>}>
       <FormulaContent />
     </Suspense>
   );

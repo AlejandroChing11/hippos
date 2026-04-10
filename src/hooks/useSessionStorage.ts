@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useCallback } from 'react';
 
 export function useSessionStorage<T>(
   key: string,
@@ -16,18 +16,22 @@ export function useSessionStorage<T>(
     }
   });
 
-  useEffect(() => {
-    try {
-      sessionStorage.setItem(key, JSON.stringify(stored));
-    } catch { /* quota exceeded */ }
-  }, [key, stored]);
-
-  const setValue = useCallback((value: T | ((prev: T) => T)) => {
-    setStored(prev => {
-      const next = value instanceof Function ? value(prev) : value;
-      return next;
-    });
-  }, []);
+  const setValue = useCallback(
+    (value: T | ((prev: T) => T)) => {
+      setStored(prev => {
+        const next = value instanceof Function ? value(prev) : value;
+        if (typeof window !== 'undefined') {
+          try {
+            sessionStorage.setItem(key, JSON.stringify(next));
+          } catch {
+            /* quota exceeded */
+          }
+        }
+        return next;
+      });
+    },
+    [key],
+  );
 
   return [stored, setValue];
 }

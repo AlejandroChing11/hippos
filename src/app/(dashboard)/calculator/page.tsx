@@ -6,6 +6,7 @@ import type { TmbCalculation } from '@/lib/types/tmb';
 import type { TmbCalculationInput } from '@/lib/supabase/tmb-calculations';
 import { usePatients } from '@/lib/hooks/usePatients';
 import { useTmbCalculations } from '@/lib/hooks/useTmbCalculations';
+import { useClinicalParams } from '@/lib/hooks/useClinicalParams';
 import { Select } from '@/components/ui/Select';
 import { Button } from '@/components/ui/Button';
 import { Table, type Column } from '@/components/ui/Table';
@@ -18,6 +19,7 @@ function CalculatorContent() {
   const patientIdFromUrl = searchParams.get('patientId');
 
   const { patients, loading: patientsLoading } = usePatients();
+  const { activityFactors, mifflinCoefficients, error: paramsError } = useClinicalParams();
   const [selectedId, setSelectedId] = useState<string>(patientIdFromUrl ?? '');
   const [isSaving, setIsSaving] = useState(false);
 
@@ -73,6 +75,15 @@ function CalculatorContent() {
         <p className="text-sm text-ink-secondary mt-1">Calcula el gasto energético y requerimiento calórico del paciente.</p>
       </div>
 
+      {paramsError && (
+        <div className="flex items-start gap-3 rounded-xl border border-warning/25 bg-warning-light px-4 py-3 text-sm text-ink-secondary">
+          <svg className="mt-0.5 h-4 w-4 shrink-0 text-warning" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+          No se pudieron cargar los parámetros personalizados. Usando valores estándar.
+        </div>
+      )}
+
       {!patientIdFromUrl && (
         <div className="max-w-sm">
           <Select label="Seleccionar paciente" options={patientOptions} placeholder="Elegir paciente…" value={selectedId} onChange={e => setSelectedId(e.target.value)} />
@@ -81,10 +92,14 @@ function CalculatorContent() {
 
       {patient ? (
         <>
-          <TmbCalculator key={patient.id} patient={patient} onSave={handleSave} />
-
+          <TmbCalculator
+            key={patient.id}
+            patient={patient}
+            onSave={handleSave}
+            activityFactors={activityFactors}
+            mifflinCoefficients={mifflinCoefficients}
+          />
           {isSaving && <p className="text-sm text-ink-tertiary text-center">Guardando cálculo…</p>}
-
           {!calcsLoading && patientHistory.length > 0 && (
             <div className="space-y-3">
               <h2 className="font-heading text-lg font-semibold text-ink">Historial de cálculos</h2>

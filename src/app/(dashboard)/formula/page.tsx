@@ -7,6 +7,7 @@ import type { TmbCalculation } from '@/lib/types/tmb';
 import type { FormulaSession, ExchangeEntry } from '@/lib/types/formula';
 import { usePatients } from '@/lib/hooks/usePatients';
 import { useTmbCalculations } from '@/lib/hooks/useTmbCalculations';
+import { useClinicalParams } from '@/lib/hooks/useClinicalParams';
 import { getTmbCalculationById } from '@/lib/supabase/tmb-calculations';
 import { getPatientById } from '@/lib/supabase/patients';
 import {
@@ -31,6 +32,7 @@ function FormulaContent() {
   const saveMsgRef = useRef<HTMLParagraphElement>(null);
 
   const { patients } = usePatients();
+  const { macroRanges } = useClinicalParams();
 
   // Linked-mode data (fetched once)
   const [linkedTmb, setLinkedTmb] = useState<TmbCalculation | null>(null);
@@ -228,7 +230,7 @@ function FormulaContent() {
             </section>
             <aside className="flex w-full min-w-0 flex-col gap-6 xl:w-[min(100%,400px)] xl:shrink-0" aria-label="Resumen nutricional y calorías">
               <CalorieGauge target={targetCalories} actual={totals.totalKcal} adequacyPercent={adequacyPercent} />
-              <MacroSummary targetCalories={targetCalories} totals={totals} adequacyPercent={adequacyPercent} />
+              <MacroSummary targetCalories={targetCalories} totals={totals} adequacyPercent={adequacyPercent} macroRanges={macroRanges} />
             </aside>
           </div>
           <section className="space-y-4" aria-labelledby="exchange-summary-heading">

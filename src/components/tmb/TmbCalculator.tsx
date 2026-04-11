@@ -3,6 +3,8 @@
 import { useMemo, useState } from 'react';
 import type { ActivityLevel, Patient } from '@/lib/types/patient';
 import type { TmbCalculationInput } from '@/lib/supabase/tmb-calculations';
+import type { ActivityFactorParam, MifflinCoefficients } from '@/lib/supabase/types';
+import { DEFAULT_MIFFLIN_COEFFICIENTS } from '@/lib/supabase/types';
 import { Card } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { Badge } from '@/components/ui/Badge';
@@ -19,6 +21,10 @@ import { OBJECTIVES } from '@/lib/constants/objectives';
 interface TmbCalculatorProps {
   patient: Patient;
   onSave: (data: TmbCalculationInput) => void;
+  /** Activity factors from DB. Falls back to hardcoded constants when not provided. */
+  activityFactors?: ActivityFactorParam[];
+  /** Mifflin coefficients from DB. Falls back to standard values when not provided. */
+  mifflinCoefficients?: MifflinCoefficients;
 }
 
 function ReadOnlyField({ label, value }: { label: string; value: string }) {
@@ -30,18 +36,32 @@ function ReadOnlyField({ label, value }: { label: string; value: string }) {
   );
 }
 
-const activityOptions = (Object.entries(ACTIVITY_FACTORS) as [ActivityLevel, (typeof ACTIVITY_FACTORS)[ActivityLevel]][]).map(
-  ([value, { label }]) => ({ value, label }),
-);
-
-export function TmbCalculator({ patient, onSave }: TmbCalculatorProps) {
+export function TmbCalculator({ patient, onSave, activityFactors, mifflinCoefficients }: TmbCalculatorProps) {
   const { weight: currentWeight, height, age, sex, objective } = patient;
   const requiresRestriction = OBJECTIVES[objective].requiresRestriction;
   const [restriction, setRestriction] = useState(0);
   const [targetBmi, setTargetBmi] = useState(22);
   const [activityLevel, setActivityLevel] = useState<ActivityLevel>(patient.activityLevel);
 
-  const activityInfo = ACTIVITY_FACTORS[activityLevel];
+  // Build activity options from DB params or fallback to constants
+  const activityOptions = useMemo(() => {
+    if (activityFactors && activityFactors.length > 0) {
+      return activityFactors.map(f => ({ value: f.key, label: f.label }));
+    }
+    return (Object.entries(ACTIVITY_FACTORS) as [ActivityLevel, typeof ACTIVITY_FACTORS[ActivityLevel]][])
+      .map(([value, { label }]) => ({ value, label }));
+  }, [activityFactors]);
+
+  // Resolve current activity info (factor + label) from DB or fallback
+  const activityInfo = useMemo(() => {
+    if (activityFactors && activityFactors.length > 0) {
+      const found = activityFactors.find(f => f.key === activityLevel);
+      return found ? { factor: found.factor, label: found.label } : { factor: ACTIVITY_FACTORS[activityLevel].factor, label: ACTIVITY_FACTORS[activityLevel].label };
+    }
+    return { factor: ACTIVITY_FACTORS[activityLevel].factor, label: ACTIVITY_FACTORS[activityLevel].label };
+  }, [activityFactors, activityLevel]);
+
+  const coefficients = mifflinCoefficients ?? DEFAULT_MIFFLIN_COEFFICIENTS;
   const effectiveTargetBmi = Math.min(24.9, Math.max(18.5, targetBmi));
 
   const currentBmi = useMemo(() => calculateBMI(currentWeight, height), [currentWeight, height]);
@@ -49,7 +69,7 @@ export function TmbCalculator({ patient, onSave }: TmbCalculatorProps) {
   const healthyWeight = useMemo(() => calculateWeightFromBMI(effectiveTargetBmi, height), [effectiveTargetBmi, height]);
   const weightDiff = useMemo(() => currentWeight - healthyWeight, [currentWeight, healthyWeight]);
 
-  const tmb = useMemo(() => calculateTMB(healthyWeight, height, age, sex), [healthyWeight, height, age, sex]);
+  const tmb = useMemo(() => calculateTMB(healthyWeight, height, age, sex, coefficients), [healthyWeight, height, age, sex, coefficients]);
   const tdee = useMemo(() => calculateTDEE(tmb, activityInfo.factor), [tmb, activityInfo.factor]);
   const targetCalories = useMemo(() => calculateTargetCalories(tdee, restriction), [tdee, restriction]);
 
@@ -100,7 +120,6 @@ export function TmbCalculator({ patient, onSave }: TmbCalculatorProps) {
             <span className="text-lg font-semibold text-ink tabular-nums">{formatNumber(currentBmi, 1)}</span>
             <Badge variant={bmiCategory.color}>{bmiCategory.label}</Badge>
           </div>
-
           <div className="max-w-xs">
             <Input
               type="number"
@@ -110,19 +129,17 @@ export function TmbCalculator({ patient, onSave }: TmbCalculatorProps) {
               max={24.9}
               step={0.1}
               value={targetBmi}
-              onChange={(e) => {
+              onChange={e => {
                 const v = Number(e.target.value);
                 setTargetBmi(Number.isFinite(v) ? v : 22);
               }}
               error={targetBmiInvalid ? 'Use un valor entre 18.5 y 24.9' : undefined}
             />
           </div>
-
           <div className="flex flex-wrap items-baseline gap-2 text-sm">
             <span className="text-ink-secondary">Peso saludable</span>
             <span className="font-semibold text-ink tabular-nums">{formatNumber(healthyWeight, 1)} kg</span>
           </div>
-
           <p className="text-sm text-ink-secondary">
             Diferencia con peso actual:{' '}
             <span className={`font-medium tabular-nums ${weightDiff > 0 ? 'text-warning' : weightDiff < 0 ? 'text-info' : 'text-ink'}`}>
@@ -135,9 +152,13 @@ export function TmbCalculator({ patient, onSave }: TmbCalculatorProps) {
       <div className="space-y-4">
         <h3 className="font-heading text-lg font-semibold text-ink">Cálculo energético</h3>
         <div className="max-w-md">
-          <Select label="Factor de actividad" options={activityOptions} value={activityLevel} onChange={(e) => setActivityLevel(e.target.value as ActivityLevel)} />
+          <Select
+            label="Factor de actividad"
+            options={activityOptions}
+            value={activityLevel}
+            onChange={e => setActivityLevel(e.target.value as ActivityLevel)}
+          />
         </div>
-
         <TmbResult
           healthyWeight={healthyWeight}
           height={height}

@@ -176,6 +176,48 @@ export type Database = {
         };
         Relationships: [];
       };
+      clinical_params: {
+        Row: {
+          id: string;
+          category: 'ACTIVITY_FACTOR' | 'MIFFLIN_COEFFICIENT' | 'MACRO_RANGE';
+          key: string;
+          label: string;
+          description: string;
+          value: number;
+          max_value: number | null;
+          sort_order: number;
+          is_active: boolean;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          category: 'ACTIVITY_FACTOR' | 'MIFFLIN_COEFFICIENT' | 'MACRO_RANGE';
+          key: string;
+          label: string;
+          description?: string;
+          value: number;
+          max_value?: number | null;
+          sort_order?: number;
+          is_active?: boolean;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          category?: 'ACTIVITY_FACTOR' | 'MIFFLIN_COEFFICIENT' | 'MACRO_RANGE';
+          key?: string;
+          label?: string;
+          description?: string;
+          value?: number;
+          max_value?: number | null;
+          sort_order?: number;
+          is_active?: boolean;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
     };
     Views: {
       report_view: {
@@ -208,6 +250,7 @@ export type Database = {
       patient_objective: 'WEIGHT_LOSS' | 'MAINTENANCE' | 'MUSCLE_GAIN' | 'PREGNANCY' | 'OTHER';
       activity_level: 'SEDENTARY' | 'LIGHTLY_ACTIVE' | 'MODERATELY_ACTIVE' | 'VERY_ACTIVE' | 'EXTREMELY_ACTIVE';
       sex_type: 'M' | 'F';
+      param_category: 'ACTIVITY_FACTOR' | 'MIFFLIN_COEFFICIENT' | 'MACRO_RANGE';
     };
     CompositeTypes: Record<string, never>;
   };
@@ -218,3 +261,41 @@ export type DbPatient = Database['hippos']['Tables']['patients']['Row'];
 export type DbTmbCalculation = Database['hippos']['Tables']['tmb_calculations']['Row'];
 export type DbFormulaSession = Database['hippos']['Tables']['formula_sessions']['Row'];
 export type DbReportRow = Database['hippos']['Views']['report_view']['Row'];
+export type DbClinicalParam = Database['hippos']['Tables']['clinical_params']['Row'];
+export type DbClinicalParamUpdate = Pick<DbClinicalParam, 'value' | 'max_value' | 'label' | 'description'>;
+
+// ─── Business types for clinical params ─────────────────────
+
+export type ParamCategory = 'ACTIVITY_FACTOR' | 'MIFFLIN_COEFFICIENT' | 'MACRO_RANGE';
+
+export interface ActivityFactorParam {
+  id: string;
+  key: string;
+  label: string;
+  description: string;
+  factor: number;
+}
+
+export interface MifflinCoefficients {
+  weightCoefficient: number;
+  heightCoefficient: number;
+  ageCoefficient: number;
+  maleConstant: number;
+  femaleConstant: number;
+}
+
+export interface MacroRange {
+  id: string;
+  key: string;
+  label: string;
+  min: number;
+  max: number;
+}
+
+export const DEFAULT_MIFFLIN_COEFFICIENTS: MifflinCoefficients = {
+  weightCoefficient: 10,
+  heightCoefficient: 6.25,
+  ageCoefficient: 5,
+  maleConstant: 5,
+  femaleConstant: -161,
+};

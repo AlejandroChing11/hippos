@@ -17,6 +17,16 @@ const dmSans = DM_Sans({
 export const metadata: Metadata = {
   title: 'Hippos — Planificación Dietaria',
   description: 'Sistema de planificación dietaria basado en intercambios de alimentos',
+  icons: {
+    icon: [
+      { url: '/favicon.png', type: 'image/png' },
+      { url: '/favicon.svg', type: 'image/svg+xml' },
+    ],
+    apple: '/favicon.png',
+  },
+  openGraph: {
+    images: ['/assets/logo-stacked-1080.png'],
+  },
 };
 
 export default function RootLayout({

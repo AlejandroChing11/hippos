@@ -27,7 +27,14 @@ export default function LoginPage() {
       <div className="w-full max-w-sm">
         <div className="bg-surface rounded-xl shadow-md border border-border p-8">
           <div className="text-center mb-8">
-            <h1 className="text-2xl font-heading font-bold text-ink">🦛 Hippos</h1>
+            <div className="mb-2">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src="/assets/logo-stacked-1080.png"
+                alt="Hippos"
+                className="w-32 h-auto mx-auto"
+              />
+            </div>
             <p className="text-sm text-ink-tertiary mt-1">Planificación Dietaria</p>
           </div>
 

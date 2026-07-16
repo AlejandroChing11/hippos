@@ -22,7 +22,12 @@ export function Sidebar({ onClose }: { onClose?: () => void }) {
   return (
     <aside className="flex flex-col h-full w-[260px] bg-surface border-r border-border">
       <div className="px-6 py-5 border-b border-border">
-        <h1 className="text-xl font-heading font-bold text-ink tracking-tight">🦛 Hippos</h1>
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src="/assets/logo-oneline-880.png"
+          alt="Hippos"
+          className="w-full h-auto max-w-[200px]"
+        />
         <p className="text-xs text-ink-tertiary mt-0.5">Planificación Dietaria</p>
       </div>
 

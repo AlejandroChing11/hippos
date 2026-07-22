@@ -1,7 +1,7 @@
 'use client';
 
-import { Suspense, useState, useMemo, useCallback, useRef, useEffect } from 'react';
-import { useSearchParams } from 'next/navigation';
+import { Suspense, useState, useMemo, useCallback, useEffect } from 'react';
+import { useSearchParams, useRouter } from 'next/navigation';
 import type { Patient } from '@/lib/types/patient';
 import type { TmbCalculation } from '@/lib/types/tmb';
 import type { FormulaSession, ExchangeEntry } from '@/lib/types/formula';
@@ -25,14 +25,17 @@ import { CalorieGauge } from '@/components/formula/CalorieGauge';
 import { Button } from '@/components/ui/Button';
 import { Select } from '@/components/ui/Select';
 import type { SelectOption } from '@/components/ui/Select';
+import { generateFormulaPDF, downloadPDF } from '@/lib/pdf/generateFormulaPDF';
+import { useToast } from '@/components/ui/Toast';
 
 function FormulaContent() {
   const searchParams = useSearchParams();
+  const router = useRouter();
   const paramTmbId = searchParams.get('tmbCalculationId');
-  const saveMsgRef = useRef<HTMLParagraphElement>(null);
 
   const { patients } = usePatients();
   const { macroRanges } = useClinicalParams();
+  const { toast } = useToast();
 
   // Linked-mode data (fetched once)
   const [linkedTmb, setLinkedTmb] = useState<TmbCalculation | null>(null);
@@ -45,7 +48,6 @@ function FormulaContent() {
   const [selectedTmbId, setSelectedTmbId] = useState('');
   const { calculations: patientTmbs } = useTmbCalculations(paramTmbId ? undefined : selectedPatientId || undefined);
 
-  const [saveMessage, setSaveMessage] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
 
   // Load linked TMB + patient + session
@@ -123,12 +125,6 @@ function FormulaContent() {
     setExchanges(createEmptyExchanges());
   }, []);
 
-  useEffect(() => {
-    if (!saveMessage) return;
-    const t = window.setTimeout(() => setSaveMessage(null), 5000);
-    return () => window.clearTimeout(t);
-  }, [saveMessage]);
-
   const handleSave = useCallback(async () => {
     if (!activeTmbId || !activePatientId) return;
     setIsSaving(true);
@@ -137,14 +133,16 @@ function FormulaContent() {
       if (existingSession) {
         const updated = await updateFormulaSession(existingSession.id, input);
         setExistingSession(updated);
+        toast('Plan actualizado correctamente');
+        router.push('/meal-plan?formulaSessionId=' + existingSession.id);
       } else {
         const created = await createFormulaSession(input);
         setExistingSession(created);
+        toast('Plan guardado. Redirigiendo al plan de comidas...');
+        router.push('/meal-plan?formulaSessionId=' + created.id);
       }
-      setSaveMessage('Plan guardado. Puedes continuar desde Pacientes o ajustar la fórmula.');
-      queueMicrotask(() => saveMsgRef.current?.focus());
     } catch (err) {
-      setSaveMessage(`Error: ${err instanceof Error ? err.message : 'No se pudo guardar'}`);
+      toast(err instanceof Error ? err.message : 'No se pudo guardar el plan', 'error');
     } finally {
       setIsSaving(false);
     }
@@ -157,13 +155,28 @@ function FormulaContent() {
     setIsSaving(true);
     try {
       await duplicateFormulaSession(existingSession.id);
-      setSaveMessage('Copia del plan guardada en el historial de sesiones.');
+      toast('Copia del plan guardada en el historial');
     } catch (err) {
-      setSaveMessage(`Error: ${err instanceof Error ? err.message : 'No se pudo duplicar'}`);
+      toast(err instanceof Error ? err.message : 'No se pudo duplicar', 'error');
     } finally {
       setIsSaving(false);
     }
-  }, [existingSession]);
+  }, [existingSession, toast]);
+
+  const [isGeneratingPDF, setIsGeneratingPDF] = useState(false);
+
+  const handleDownloadPDF = useCallback(() => {
+    if (!existingSession || !activePatient || !activeTmb) return;
+    setIsGeneratingPDF(true);
+    try {
+      const doc = generateFormulaPDF({ patient: activePatient, tmbCalculation: activeTmb, session: existingSession });
+      downloadPDF(doc, activePatient);
+    } catch (err) {
+      toast(err instanceof Error ? err.message : 'No se pudo generar el PDF', 'error');
+    } finally {
+      setIsGeneratingPDF(false);
+    }
+  }, [existingSession, activePatient, activeTmb, toast]);
 
   const hasAllergies = activePatient && activePatient.foodAllergies.length > 0;
   const isReady = !!activeTmb && !dataLoading;
@@ -183,16 +196,15 @@ function FormulaContent() {
           <div className="flex shrink-0 flex-wrap items-center gap-2 sm:justify-end">
             <Button variant="ghost" size="sm" onClick={handleReset} disabled={isSaving}>Resetear intercambios</Button>
             <Button variant="secondary" size="sm" onClick={handleDuplicate} disabled={isSaving || !existingSession}>Duplicar plan</Button>
-            <Button size="sm" onClick={handleSave} disabled={isSaving}>{isSaving ? 'Guardando…' : 'Guardar plan'}</Button>
+            <Button size="sm" onClick={handleSave} disabled={isSaving}>{isSaving ? 'Guardando…' : 'Guardar y distribuir comidas'}</Button>
+            {existingSession && activePatient && activeTmb && (
+              <Button size="sm" variant="primary" onClick={handleDownloadPDF} disabled={isGeneratingPDF}>
+                {isGeneratingPDF ? 'Generando PDF…' : 'Descargar PDF'}
+              </Button>
+            )}
           </div>
         )}
       </header>
-
-      <div aria-live="polite" className="min-h-5 text-sm text-sage" role="status">
-        {saveMessage ? (
-          <p ref={saveMsgRef} tabIndex={-1} className="rounded-lg border border-sage/30 bg-sage-light/80 px-4 py-3 text-ink outline-none">{saveMessage}</p>
-        ) : null}
-      </div>
 
       {!linkedTmb && (
         <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">

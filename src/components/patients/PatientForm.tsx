@@ -15,6 +15,7 @@ interface PatientFormProps {
   patient?: Patient;
   onSave: (data: PatientFormData) => Promise<void>;
   onCancel: () => void;
+  saving?: boolean;
 }
 
 const activityOptions = (Object.entries(ACTIVITY_FACTORS) as [ActivityLevel, typeof ACTIVITY_FACTORS[ActivityLevel]][]).map(
@@ -30,20 +31,19 @@ const sexOptions = [
   { value: 'F', label: 'Femenino' },
 ];
 
-export function PatientForm({ patient, onSave, onCancel }: PatientFormProps) {
+export function PatientForm({ patient, onSave, onCancel, saving = false }: PatientFormProps) {
   const [firstName, setFirstName] = useState(patient?.firstName ?? '');
   const [lastName, setLastName] = useState(patient?.lastName ?? '');
   const [birthDate, setBirthDate] = useState(patient?.birthDate ?? '');
-  const [sex, setSex] = useState<'M' | 'F' | ''>(patient?.sex ?? '');
+  const [sex, setSex] = useState<'M' | 'F'>(patient?.sex ?? 'F');
   const [weight, setWeight] = useState(patient?.weight?.toString() ?? '');
   const [height, setHeight] = useState(patient?.height?.toString() ?? '');
-  const [activityLevel, setActivityLevel] = useState<ActivityLevel | ''>(patient?.activityLevel ?? '');
-  const [objective, setObjective] = useState<PatientObjective | ''>(patient?.objective ?? '');
   const [pathologies, setPathologies] = useState<string[]>(patient?.pathologies ?? []);
-  const [foodAllergies, setFoodAllergies] = useState<string[]>(patient?.foodAllergies ?? []);
+  const [allergies, setAllergies] = useState<string[]>(patient?.foodAllergies ?? []);
+  const [objective, setObjective] = useState<PatientObjective>(patient?.objective ?? 'MAINTENANCE');
+  const [activityLevel, setActivityLevel] = useState<ActivityLevel>(patient?.activityLevel ?? 'SEDENTARY');
   const [notes, setNotes] = useState(patient?.notes ?? '');
   const [errors, setErrors] = useState<Record<string, string>>({});
-  const [isSaving, setIsSaving] = useState(false);
 
   const computedAge = birthDate ? calculateAge(birthDate) : null;
 
@@ -67,7 +67,6 @@ export function PatientForm({ patient, onSave, onCancel }: PatientFormProps) {
     e.preventDefault();
     if (!validate()) return;
 
-    setIsSaving(true);
     try {
       await onSave({
         firstName: firstName.trim(),
@@ -77,15 +76,13 @@ export function PatientForm({ patient, onSave, onCancel }: PatientFormProps) {
         weight: parseFloat(weight),
         height: parseFloat(height),
         pathologies,
-        foodAllergies,
+        foodAllergies: allergies,
         objective: objective as PatientObjective,
         activityLevel: activityLevel as ActivityLevel,
         notes: notes.trim(),
       });
     } catch (err) {
       setErrors({ form: err instanceof Error ? err.message : 'Error al guardar' });
-    } finally {
-      setIsSaving(false);
     }
   }
 
@@ -119,7 +116,7 @@ export function PatientForm({ patient, onSave, onCancel }: PatientFormProps) {
       </div>
 
       <TagInput label="Patologías" tags={pathologies} onChange={setPathologies} placeholder="Escribir patología y Enter" />
-      <TagInput label="Alergias alimentarias" tags={foodAllergies} onChange={setFoodAllergies} placeholder="Escribir alergia y Enter" />
+      <TagInput label="Alergias alimentarias" tags={allergies} onChange={setAllergies} placeholder="Escribir alergia y Enter" />
 
       <div className="space-y-1">
         <label className="block text-sm font-medium text-ink-secondary">Notas</label>
@@ -133,9 +130,9 @@ export function PatientForm({ patient, onSave, onCancel }: PatientFormProps) {
       </div>
 
       <div className="flex justify-end gap-3 pt-2">
-        <Button type="button" variant="ghost" onClick={onCancel} disabled={isSaving}>Cancelar</Button>
-        <Button type="submit" disabled={isSaving}>
-          {isSaving ? 'Guardando...' : patient ? 'Guardar cambios' : 'Crear paciente'}
+        <Button type="button" variant="ghost" onClick={onCancel} disabled={saving}>Cancelar</Button>
+        <Button type="submit" loading={saving} disabled={saving}>
+          {saving ? 'Guardando…' : patient ? 'Guardar cambios' : 'Crear paciente'}
         </Button>
       </div>
     </form>

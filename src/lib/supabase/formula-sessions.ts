@@ -105,6 +105,16 @@ export async function getFormulaSessionByTmbId(tmbCalculationId: string): Promis
   return data ? toFormulaSession(data) : null;
 }
 
+export async function getFormulaSessionById(id: string): Promise<FormulaSession | null> {
+  const { data, error } = await supabase
+    .from('formula_sessions')
+    .select('*')
+    .eq('id', id)
+    .maybeSingle();
+  if (error) throw error;
+  return data ? toFormulaSession(data) : null;
+}
+
 export async function createFormulaSession(input: FormulaSessionInput): Promise<FormulaSession> {
   const { data, error } = await supabase
     .from('formula_sessions')

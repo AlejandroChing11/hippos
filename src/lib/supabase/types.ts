@@ -67,10 +67,12 @@ export type Database = {
           current_bmi: number;
           target_bmi: number;
           healthy_weight: number;
+          requirement_weight: number;
           tmb: number;
           tdee: number;
           caloric_restriction: number;
           target_calories: number;
+          formula_type: string;
           created_at: string;
         };
         Insert: {
@@ -86,10 +88,12 @@ export type Database = {
           current_bmi: number;
           target_bmi: number;
           healthy_weight: number;
+          requirement_weight?: number;
           tmb: number;
           tdee: number;
-          caloric_restriction: number;
+          caloric_restriction?: number;
           target_calories: number;
+          formula_type?: string;
           created_at?: string;
         };
         Update: {
@@ -105,10 +109,12 @@ export type Database = {
           current_bmi?: number;
           target_bmi?: number;
           healthy_weight?: number;
+          requirement_weight?: number;
           tmb?: number;
           tdee?: number;
           caloric_restriction?: number;
           target_calories?: number;
+          formula_type?: string;
           created_at?: string;
         };
         Relationships: [];
@@ -218,6 +224,147 @@ export type Database = {
         };
         Relationships: [];
       };
+      meal_distributions: {
+        Row: {
+          id: string;
+          formula_session_id: string;
+          patient_id: string;
+          distribution: Record<string, { breakfast: number; morningSnack: number; lunch: number; afternoonSnack: number; dinner: number }>;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          formula_session_id: string;
+          patient_id: string;
+          distribution: Record<string, { breakfast: number; morningSnack: number; lunch: number; afternoonSnack: number; dinner: number }>;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          formula_session_id?: string;
+          patient_id?: string;
+          distribution?: Record<string, { breakfast: number; morningSnack: number; lunch: number; afternoonSnack: number; dinner: number }>;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
+      food_equivalencies: {
+        Row: {
+          id: string;
+          summary_group: string;
+          food_name: string;
+          portion_desc: string;
+          portion_grams: number | null;
+          notes: string;
+          sort_order: number;
+          is_active: boolean;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          summary_group: string;
+          food_name: string;
+          portion_desc: string;
+          portion_grams?: number | null;
+          notes?: string;
+          sort_order?: number;
+          is_active?: boolean;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          summary_group?: string;
+          food_name?: string;
+          portion_desc?: string;
+          portion_grams?: number | null;
+          notes?: string;
+          sort_order?: number;
+          is_active?: boolean;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
+      plan_template_slides: {
+        Row: {
+          id: string;
+          title: string;
+          category: string;
+          content: { heading: string; body?: string; bullets?: string[]; imageHint?: string; backgroundColor?: string };
+          sort_order: number;
+          is_active: boolean;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          title: string;
+          category: string;
+          content: { heading: string; body?: string; bullets?: string[]; imageHint?: string; backgroundColor?: string };
+          sort_order?: number;
+          is_active?: boolean;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          title?: string;
+          category?: string;
+          content?: { heading: string; body?: string; bullets?: string[]; imageHint?: string; backgroundColor?: string };
+          sort_order?: number;
+          is_active?: boolean;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
+      generated_plans: {
+        Row: {
+          id: string;
+          patient_id: string;
+          formula_session_id: string;
+          meal_distribution_id: string;
+          plan_title: string;
+          objective_text: string;
+          duration_months: number;
+          weight_loss_per_month: number;
+          weight_goals: { date: string; targetWeight: number }[];
+          template_slide_ids: string[];
+          generated_at: string;
+        };
+        Insert: {
+          id?: string;
+          patient_id: string;
+          formula_session_id: string;
+          meal_distribution_id: string;
+          plan_title: string;
+          objective_text: string;
+          duration_months: number;
+          weight_loss_per_month: number;
+          weight_goals: { date: string; targetWeight: number }[];
+          template_slide_ids: string[];
+          generated_at?: string;
+        };
+        Update: {
+          id?: string;
+          patient_id?: string;
+          formula_session_id?: string;
+          meal_distribution_id?: string;
+          plan_title?: string;
+          objective_text?: string;
+          duration_months?: number;
+          weight_loss_per_month?: number;
+          weight_goals?: { date: string; targetWeight: number }[];
+          template_slide_ids?: string[];
+          generated_at?: string;
+        };
+        Relationships: [];
+      };
     };
     Views: {
       report_view: {
@@ -299,3 +446,86 @@ export const DEFAULT_MIFFLIN_COEFFICIENTS: MifflinCoefficients = {
   maleConstant: 5,
   femaleConstant: -161,
 };
+
+// ─── meal_distributions ───
+
+export interface MealTimeAllocation {
+  breakfast: number;
+  morningSnack: number;
+  lunch: number;
+  afternoonSnack: number;
+  dinner: number;
+}
+
+export type MealDistributionMap = Record<string, MealTimeAllocation>;
+
+export interface DbMealDistribution {
+  id: string;
+  formula_session_id: string;
+  patient_id: string;
+  distribution: MealDistributionMap;
+  created_at: string;
+  updated_at: string;
+}
+
+export type DbMealDistributionInsert = Omit<DbMealDistribution, 'id' | 'created_at' | 'updated_at'>;
+
+// ─── food_equivalencies ───
+
+export interface DbFoodEquivalency {
+  id: string;
+  summary_group: string;
+  food_name: string;
+  portion_desc: string;
+  portion_grams: number | null;
+  notes: string;
+  sort_order: number;
+  is_active: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
+export type DbFoodEquivalencyInsert = Omit<DbFoodEquivalency, 'id' | 'created_at' | 'updated_at'>;
+export type DbFoodEquivalencyUpdate = Partial<Omit<DbFoodEquivalencyInsert, 'summary_group'>>;
+
+// ─── plan_template_slides ───
+
+export interface DbPlanTemplateSlide {
+  id: string;
+  title: string;
+  category: string;
+  content: {
+    heading: string;
+    body?: string;
+    bullets?: string[];
+    imageHint?: string;
+    backgroundColor?: string;
+  };
+  sort_order: number;
+  is_active: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
+// ─── generated_plans ───
+
+export interface WeightGoal {
+  date: string;
+  targetWeight: number;
+}
+
+export interface DbGeneratedPlan {
+  id: string;
+  patient_id: string;
+  formula_session_id: string;
+  meal_distribution_id: string;
+  plan_title: string;
+  objective_text: string;
+  duration_months: number;
+  weight_loss_per_month: number;
+  weight_goals: WeightGoal[];
+  template_slide_ids: string[];
+  generated_at: string;
+}
+
+export type DbGeneratedPlanInsert = Omit<DbGeneratedPlan, 'id' | 'generated_at'>;

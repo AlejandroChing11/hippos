@@ -6,6 +6,8 @@ const NAV = [
   { href: '/patients', label: 'Pacientes', icon: 'users' },
   { href: '/calculator', label: 'Calculadora TMB', icon: 'calc' },
   { href: '/formula', label: 'Fórmula', icon: 'table' },
+  { href: '/meal-plan', label: 'Plan de comidas', icon: 'meal-plan' },
+  { href: '/equivalencies', label: 'Equivalencias', icon: 'equivalencies' },
   { href: '/reports', label: 'Historial', icon: 'report' },
   { href: '/settings', label: 'Configuración', icon: 'settings' },
 ] as const;
@@ -92,6 +94,24 @@ function NavIcon({ name }: { name: string }) {
           <rect width="8" height="4" x="8" y="2" rx="1" ry="1" />
           <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2" />
           <path d="M12 11h4M12 16h4M8 11h.01M8 16h.01" />
+        </>
+      )}
+      {name === 'meal-plan' && (
+        <>
+          <path d="M18 20V10" />
+          <path d="M12 20V4" />
+          <path d="M6 20v-4" />
+          <path d="M3 8l3-3 3 3" />
+          <path d="M9 5h6" />
+          <circle cx="12" cy="20" r="2" />
+        </>
+      )}
+      {name === 'equivalencies' && (
+        <>
+          <path d="M3 6l3 4 3-4 3 4 3-4 3 4" />
+          <path d="M3 14l3 4 3-4 3 4 3-4 3 4" />
+          <line x1="3" x2="21" y1="10" y2="10" />
+          <line x1="3" x2="21" y1="18" y2="18" />
         </>
       )}
       {name === 'report' && (

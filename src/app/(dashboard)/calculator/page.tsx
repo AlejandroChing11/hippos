@@ -9,6 +9,7 @@ import { useTmbCalculations } from '@/lib/hooks/useTmbCalculations';
 import { useClinicalParams } from '@/lib/hooks/useClinicalParams';
 import { Select } from '@/components/ui/Select';
 import { Button } from '@/components/ui/Button';
+import { useToast } from '@/components/ui/Toast';
 import { Table, type Column } from '@/components/ui/Table';
 import { TmbCalculator } from '@/components/tmb/TmbCalculator';
 import { formatDate, formatKcal, formatNumber } from '@/lib/utils/format';
@@ -17,6 +18,7 @@ function CalculatorContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const patientIdFromUrl = searchParams.get('patientId');
+  const { toast } = useToast();
 
   const { patients, loading: patientsLoading } = usePatients();
   const { activityFactors, mifflinCoefficients, error: paramsError } = useClinicalParams();
@@ -34,11 +36,13 @@ function CalculatorContent() {
     setIsSaving(true);
     try {
       const created = await create(data);
+      toast('Cálculo guardado. Continuando a la fórmula…');
       router.push(`/formula?tmbCalculationId=${created.id}`);
-    } catch {
+    } catch (err) {
+      toast(err instanceof Error ? err.message : 'Error al guardar el cálculo', 'error');
       setIsSaving(false);
     }
-  }, [create, router]);
+  }, [create, router, toast]);
 
   const columns: Column<TmbCalculation>[] = useMemo(
     () => [

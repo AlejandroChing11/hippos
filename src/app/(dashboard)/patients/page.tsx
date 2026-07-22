@@ -9,37 +9,50 @@ import { PatientList } from '@/components/patients/PatientList';
 import { Modal } from '@/components/ui/Modal';
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 import { Button } from '@/components/ui/Button';
+import { useToast } from '@/components/ui/Toast';
 
 export default function PatientsPage() {
   const router = useRouter();
   const { patients, loading, error, create, update, remove, refetch } = usePatients();
+  const { toast } = useToast();
 
   const [formOpen, setFormOpen] = useState(false);
   const [editing, setEditing] = useState<Patient | undefined>();
   const [deleteId, setDeleteId] = useState<string | null>(null);
+  const [saving, setSaving] = useState(false);
 
   const openCreate = useCallback(() => { setEditing(undefined); setFormOpen(true); }, []);
   const openEdit = useCallback((patient: Patient) => { setEditing(patient); setFormOpen(true); }, []);
   const closeForm = useCallback(() => { setFormOpen(false); setEditing(undefined); }, []);
 
   const handleSave = useCallback(async (data: PatientFormData) => {
-    if (editing) {
-      await update(editing.id, data);
-    } else {
-      await create(data);
+    setSaving(true);
+    try {
+      if (editing) {
+        await update(editing.id, data);
+        toast('Paciente actualizado correctamente');
+      } else {
+        await create(data);
+        toast('Paciente creado correctamente');
+      }
+      closeForm();
+    } catch (err) {
+      toast(err instanceof Error ? err.message : 'Error al guardar paciente', 'error');
+    } finally {
+      setSaving(false);
     }
-    closeForm();
-  }, [editing, update, create, closeForm]);
+  }, [editing, update, create, closeForm, toast]);
 
   const handleDelete = useCallback(async () => {
     if (!deleteId) return;
     try {
       await remove(deleteId);
-    } catch {
-      /* ConfirmDialog already closed — error visible on refetch */
+      toast('Paciente eliminado');
+    } catch (err) {
+      toast(err instanceof Error ? err.message : 'Error al eliminar', 'error');
     }
     setDeleteId(null);
-  }, [deleteId, remove]);
+  }, [deleteId, remove, toast]);
 
   const handleCalculate = useCallback((patient: Patient) => {
     router.push(`/calculator?patientId=${patient.id}`);
@@ -47,11 +60,16 @@ export default function PatientsPage() {
 
   if (loading) {
     return (
-      <div className="space-y-6">
+      <div className="space-y-6 animate-fade-in">
         <div className="flex items-center justify-between">
           <h1 className="text-2xl font-heading font-bold text-ink">Pacientes</h1>
+          <div className="skeleton h-9 w-36" />
         </div>
-        <div className="py-12 text-center text-sm text-ink-tertiary">Cargando pacientes…</div>
+        <div className="space-y-3">
+          {[1, 2, 3].map(i => (
+            <div key={i} className="skeleton h-16 w-full" />
+          ))}
+        </div>
       </div>
     );
   }
@@ -78,7 +96,7 @@ export default function PatientsPage() {
       <PatientList patients={patients} onEdit={openEdit} onDelete={setDeleteId} onCalculate={handleCalculate} />
 
       <Modal open={formOpen} onClose={closeForm} title={editing ? 'Editar paciente' : 'Nuevo paciente'} size="lg">
-        <PatientForm patient={editing} onSave={handleSave} onCancel={closeForm} />
+        <PatientForm key={editing?.id ?? 'new'} patient={editing} onSave={handleSave} onCancel={closeForm} saving={saving} />
       </Modal>
 
       <ConfirmDialog

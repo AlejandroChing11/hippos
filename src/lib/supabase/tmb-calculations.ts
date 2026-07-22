@@ -1,6 +1,6 @@
 import { supabase } from './client';
 import type { DbTmbCalculation } from './types';
-import type { TmbCalculation } from '@/lib/types/tmb';
+import type { TmbCalculation, FormulaType } from '@/lib/types/tmb';
 import type { ActivityLevel, PatientObjective } from '@/lib/types/patient';
 
 // ─── Converters ─────────────────────────────────────────────
@@ -19,10 +19,12 @@ function toTmbCalculation(row: DbTmbCalculation): TmbCalculation {
     currentBmi: Number(row.current_bmi),
     targetBmi: Number(row.target_bmi),
     healthyWeight: Number(row.healthy_weight),
+    requirementWeight: Number(row.requirement_weight ?? row.healthy_weight),
     tmb: Number(row.tmb),
     tdee: Number(row.tdee),
     caloricRestriction: Number(row.caloric_restriction),
     targetCalories: Number(row.target_calories),
+    formulaType: (row.formula_type as FormulaType) ?? 'mifflin',
     createdAt: row.created_at,
   };
 }
@@ -42,10 +44,12 @@ function toDbInsert(d: TmbCalculationInput) {
     current_bmi: d.currentBmi,
     target_bmi: d.targetBmi,
     healthy_weight: d.healthyWeight,
+    requirement_weight: d.requirementWeight,
     tmb: d.tmb,
     tdee: d.tdee,
     caloric_restriction: d.caloricRestriction,
     target_calories: d.targetCalories,
+    formula_type: d.formulaType,
   };
 }
 

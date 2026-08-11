@@ -2,15 +2,18 @@
 
 import { useState, type FormEvent } from 'react';
 import { useRouter } from 'next/navigation';
+import Image from 'next/image';
 
 export default function LoginPage() {
   const router = useRouter();
   const [user, setUser] = useState('');
   const [pass, setPass] = useState('');
   const [error, setError] = useState('');
+  const [submitting, setSubmitting] = useState(false);
 
   function handleSubmit(e: FormEvent) {
     e.preventDefault();
+    setSubmitting(true);
     if (
       user === process.env.NEXT_PUBLIC_AUTH_USER &&
       pass === process.env.NEXT_PUBLIC_AUTH_PASS
@@ -19,6 +22,7 @@ export default function LoginPage() {
       router.push('/patients');
     } else {
       setError('Credenciales inválidas');
+      setSubmitting(false);
     }
   }
 
@@ -28,11 +32,13 @@ export default function LoginPage() {
         <div className="bg-surface rounded-xl shadow-md border border-border p-8">
           <div className="text-center mb-8">
             <div className="mb-2">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
+              <Image
                 src="/assets/logo-stacked-1080.png"
                 alt="Hippos"
-                className="w-32 h-auto mx-auto"
+                width={128}
+                height={128}
+                priority
+                className="mx-auto h-auto"
               />
             </div>
             <p className="text-sm text-ink-tertiary mt-1">Planificación Dietaria</p>
@@ -54,7 +60,8 @@ export default function LoginPage() {
                 type="text"
                 value={user}
                 onChange={e => { setUser(e.target.value); setError(''); }}
-                className="w-full px-3 py-2.5 bg-inset border border-border rounded-lg text-ink text-sm placeholder:text-ink-muted focus:outline-none focus:border-sage focus:ring-1 focus:ring-sage"
+                disabled={submitting}
+                className="w-full px-3 py-2.5 bg-inset border border-border rounded-lg text-ink text-sm placeholder:text-ink-muted focus:outline-none focus:border-sage focus:ring-1 focus:ring-sage disabled:opacity-50"
                 autoComplete="username"
                 required
               />
@@ -69,7 +76,8 @@ export default function LoginPage() {
                 type="password"
                 value={pass}
                 onChange={e => { setPass(e.target.value); setError(''); }}
-                className="w-full px-3 py-2.5 bg-inset border border-border rounded-lg text-ink text-sm placeholder:text-ink-muted focus:outline-none focus:border-sage focus:ring-1 focus:ring-sage"
+                disabled={submitting}
+                className="w-full px-3 py-2.5 bg-inset border border-border rounded-lg text-ink text-sm placeholder:text-ink-muted focus:outline-none focus:border-sage focus:ring-1 focus:ring-sage disabled:opacity-50"
                 autoComplete="current-password"
                 required
               />
@@ -77,9 +85,10 @@ export default function LoginPage() {
 
             <button
               type="submit"
-              className="w-full py-2.5 bg-sage text-white font-medium rounded-lg hover:bg-sage-dark transition-colors cursor-pointer"
+              disabled={submitting}
+              className="w-full py-2.5 bg-sage text-white font-medium rounded-lg hover:bg-sage-dark transition-colors cursor-pointer disabled:opacity-70 disabled:cursor-not-allowed"
             >
-              Iniciar sesión
+              {submitting ? 'Ingresando…' : 'Iniciar sesión'}
             </button>
           </form>
         </div>

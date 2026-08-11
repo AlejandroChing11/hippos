@@ -267,7 +267,10 @@ function MealPlanContent() {
       <div className="flex flex-col items-center justify-center rounded-xl border border-dashed border-border bg-surface/50 py-20 text-center">
         <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-inset">
           <svg className="h-7 w-7 text-ink-muted" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5} aria-hidden>
-            <path strokeLinecap="round" strokeLinejoin="round" d="M9 12h3.75M9 15h3.75M9 18h3.75m3 .75H18a2.25 2.25 0 002.25-2.25V6.108c0-1.135-.845-2.098-1.976-2.192a48.424 48.424 0 00-1.123-.08m-5.801 0c-.065.21-.1.433-.1.664 0 .414.336.75.75.75h4.5a.75.75 0 00.75-.75 2.25 2.25 0 00-.1-.664m-5.8 0A2.251 2.251 0 0113.5 2.25H15a2.25 2.25 0 012.15 1.586m-5.8 0c-.376.023-.75.05-1.124.08C9.095 4.01 8.25 4.973 8.25 6.108V19.5a2.25 2.25 0 002.25 2.25h.75" />
+            <circle cx="12" cy="11" r="7" />
+            <path d="M12 8v6M9 11h6" strokeLinecap="round" />
+            <path d="M5 20h4m2 0h4m2 0h2" strokeLinecap="round" />
+            <path d="M7 19.5v1a1.5 1.5 0 001.5 1.5h7a1.5 1.5 0 001.5-1.5v-1" />
           </svg>
         </div>
         <p className="max-w-sm text-pretty text-sm text-ink-secondary">

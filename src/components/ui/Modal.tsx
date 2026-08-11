@@ -38,6 +38,27 @@ export function Modal({ open, onClose, title, children, size = 'md' }: ModalProp
     return () => document.removeEventListener('keydown', handler);
   }, [open, onClose]);
 
+  // Focus trapping
+  useEffect(() => {
+    if (!open) return;
+    const el = overlayRef.current;
+    if (!el) return;
+    const FOCUSABLE = 'a[href], button:not([disabled]), input, select, textarea, [tabindex]:not([tabindex="-1"])';
+    const first = el.querySelector<HTMLElement>(FOCUSABLE);
+    first?.focus();
+
+    const trap = (e: KeyboardEvent) => {
+      if (e.key !== 'Tab') return;
+      const focusable = [...el.querySelectorAll<HTMLElement>(FOCUSABLE)];
+      if (!focusable.length) return;
+      const firstEl = focusable[0], lastEl = focusable[focusable.length - 1];
+      if (e.shiftKey && document.activeElement === firstEl) { e.preventDefault(); lastEl.focus(); }
+      else if (!e.shiftKey && document.activeElement === lastEl) { e.preventDefault(); firstEl.focus(); }
+    };
+    document.addEventListener('keydown', trap);
+    return () => document.removeEventListener('keydown', trap);
+  }, [open]);
+
   if (!visible) return null;
 
   function handleClose() { setAnimating(false); setTimeout(onClose, 200); }

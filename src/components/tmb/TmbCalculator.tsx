@@ -199,8 +199,8 @@ export function TmbCalculator({ patient, onSave, activityFactors, mifflinCoeffic
             </div>
             {rqWeight.adjustedWeight !== null && (
               <div className="flex justify-between text-sm">
-                <span className="text-amber-700">Peso ajustado (IMC &gt; 25)</span>
-                <span className="font-medium tabular-nums text-amber-700">{formatNumber(rqWeight.adjustedWeight, 1)} kg</span>
+                <span className="text-warning">Peso ajustado (IMC &gt; 25)</span>
+                <span className="font-medium tabular-nums text-warning">{formatNumber(rqWeight.adjustedWeight, 1)} kg</span>
               </div>
             )}
             <div className="flex justify-between text-sm pt-1 border-t border-border">

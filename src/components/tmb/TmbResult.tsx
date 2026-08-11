@@ -74,8 +74,8 @@ export function TmbResult({
 
       {/* Mifflin reference when DRI is active */}
       {isDri && mifflinTmb !== undefined && (
-        <div className="rounded-lg bg-amber-50/50 px-3 py-2 text-xs text-amber-800 leading-relaxed">
-          <span className="block text-[11px] font-sans text-amber-600 mb-0.5">Referencia — Mifflin-St Jeor (peso saludable)</span>
+        <div className="rounded-lg bg-warning-light px-3 py-2 text-xs text-warning leading-relaxed">
+          <span className="block text-[11px] font-sans text-warning mb-0.5 opacity-80">Referencia — Mifflin-St Jeor (peso saludable)</span>
           <span className="font-mono tabular-nums">{mifflinFormula} = {formatKcal(mifflinTmb)}</span>
         </div>
       )}

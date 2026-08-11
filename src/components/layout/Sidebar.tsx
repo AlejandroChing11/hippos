@@ -1,5 +1,6 @@
 'use client';
 
+import Image from 'next/image';
 import { usePathname, useRouter } from 'next/navigation';
 
 const NAV = [
@@ -24,11 +25,13 @@ export function Sidebar({ onClose }: { onClose?: () => void }) {
   return (
     <aside className="flex flex-col h-full w-[260px] bg-surface border-r border-border">
       <div className="px-6 py-5 border-b border-border">
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img
+        <Image
           src="/assets/logo-oneline-880.png"
           alt="Hippos"
-          className="w-full h-auto max-w-[200px]"
+          width={200}
+          height={44}
+          priority
+          className="h-auto"
         />
         <p className="text-xs text-ink-tertiary mt-0.5">Planificación Dietaria</p>
       </div>
@@ -71,9 +74,19 @@ export function Sidebar({ onClose }: { onClose?: () => void }) {
   );
 }
 
+const ARIA_LABELS: Record<string, string> = {
+  users: 'Pacientes',
+  calc: 'Calculadora TMB',
+  table: 'Fórmula',
+  'meal-plan': 'Plan de comidas',
+  equivalencies: 'Equivalencias',
+  report: 'Historial',
+  settings: 'Configuración',
+};
+
 function NavIcon({ name }: { name: string }) {
   return (
-    <svg className="w-5 h-5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round">
+    <svg className="w-5 h-5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round" aria-label={ARIA_LABELS[name] ?? name} role="img">
       {name === 'users' && (
         <>
           <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />

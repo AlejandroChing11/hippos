@@ -56,7 +56,7 @@ export function MealDistributionTable({ summaryTotals, distribution, onChange, d
             <th className="px-3 py-2.5 text-center font-medium text-ink-secondary text-xs uppercase tracking-wider">Total</th>
             <th className="px-3 py-2.5 text-center font-medium text-ink-secondary text-xs uppercase tracking-wider w-[4px]"></th>
             {times.map(t => (
-              <th key={t.key} className="px-1.5 py-2.5 text-center font-medium text-ink-secondary text-xs uppercase tracking-wider min-w-[68px]">
+              <th key={t.key} title={t.label} className="px-1.5 py-2.5 text-center font-medium text-ink-secondary text-xs uppercase tracking-wider min-w-[68px]">
                 {t.shortLabel}
               </th>
             ))}

@@ -76,7 +76,7 @@ export default function PatientsPage() {
 
   if (error) {
     return (
-      <div className="space-y-6">
+    <div className="mx-auto max-w-[1400px] space-y-6">
         <h1 className="text-2xl font-heading font-bold text-ink">Pacientes</h1>
         <div className="rounded-xl border border-danger/25 bg-danger-light px-4 py-3 text-sm text-danger">
           {error}
@@ -87,8 +87,8 @@ export default function PatientsPage() {
   }
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
+    <div className="mx-auto max-w-[1400px] space-y-6">
+      <div className="flex items-center justify-between border-b border-border/80 pb-6">
         <h1 className="text-2xl font-heading font-bold text-ink">Pacientes</h1>
         <Button onClick={openCreate}>Nuevo Paciente</Button>
       </div>

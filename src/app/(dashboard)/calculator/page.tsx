@@ -73,8 +73,8 @@ function CalculatorContent() {
   }
 
   return (
-    <div className="space-y-8">
-      <div>
+    <div className="mx-auto max-w-[1400px] space-y-8">
+      <div className="border-b border-border/80 pb-6">
         <h1 className="font-heading text-2xl font-bold text-ink">Calculadora TMB</h1>
         <p className="text-sm text-ink-secondary mt-1">Calcula el gasto energético y requerimiento calórico del paciente.</p>
       </div>

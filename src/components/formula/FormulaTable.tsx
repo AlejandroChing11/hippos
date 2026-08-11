@@ -79,6 +79,7 @@ export function FormulaTable({ exchanges, onChange }: FormulaTableProps) {
 
   return (
     <div className="overflow-x-auto rounded-xl border border-border bg-surface shadow-xs">
+      <div className="hidden md:block">
       <table className="w-full text-sm">
         <thead>
           <tr className="bg-inset text-ink-secondary">
@@ -148,6 +149,48 @@ export function FormulaTable({ exchanges, onChange }: FormulaTableProps) {
           </tr>
         </tfoot>
       </table>
+      </div>
+      <div className="md:hidden divide-y divide-border">
+        {rows.map((row) => (
+          <div key={row.subgroup.id} className="p-4 space-y-2">
+            <div className="flex items-baseline justify-between gap-2">
+              <span className="text-xs font-semibold text-sage">{row.groupId} — {row.groupName}</span>
+              <span className="text-xs text-ink-tertiary">{row.subgroup.name}</span>
+            </div>
+            <dl className="grid grid-cols-2 gap-x-4 gap-y-1 text-sm">
+              <div><dt className="text-ink-tertiary text-xs">Intercambios</dt><dd className="text-ink tabular-nums">{row.exchangeCount}</dd></div>
+              <div><dt className="text-ink-tertiary text-xs">Prot (g)</dt><dd className="text-ink tabular-nums">{row.exchangeCount > 0 ? formatNumber(row.protein) : '—'}</dd></div>
+              <div><dt className="text-ink-tertiary text-xs">Grasa (g)</dt><dd className="text-ink tabular-nums">{row.exchangeCount > 0 ? formatNumber(row.fat) : '—'}</dd></div>
+              <div><dt className="text-ink-tertiary text-xs">CHO (g)</dt><dd className="text-ink tabular-nums">{row.exchangeCount > 0 ? formatNumber(row.carbs) : '—'}</dd></div>
+              <div className="col-span-2 border-t border-border/60 pt-1"><dt className="text-ink-tertiary text-xs">Kcal</dt><dd className="text-ink font-medium tabular-nums">{row.exchangeCount > 0 ? formatNumber(row.kcal) : '—'}</dd></div>
+            </dl>
+            <div className="flex items-center gap-2 pt-1">
+              <label className="text-xs text-ink-secondary">Intercambios</label>
+              <input
+                type="number"
+                min={0}
+                step={0.5}
+                value={row.exchangeCount || ''}
+                placeholder="0"
+                onChange={(e) => {
+                  const v = e.target.value;
+                  handleChange(row.subgroup.id, v === '' ? 0 : Math.max(0, parseFloat(v) || 0));
+                }}
+                className="w-20 px-2 py-1 text-right text-sm bg-inset border border-border rounded-lg focus:outline-none focus-visible:border-sage focus-visible:ring-2 focus-visible:ring-sage/30 tabular-nums"
+              />
+            </div>
+          </div>
+        ))}
+        <div className="p-4 bg-inset font-semibold text-sm">
+          <div className="flex justify-between"><span>Total</span><span className="tabular-nums" /></div>
+          <dl className="grid grid-cols-2 gap-x-4 gap-y-1 mt-2">
+            <div><dt className="text-ink-tertiary text-xs font-normal">Prot (g)</dt><dd className="text-ink tabular-nums">{formatNumber(totals.protein)}</dd></div>
+            <div><dt className="text-ink-tertiary text-xs font-normal">Grasa (g)</dt><dd className="text-ink tabular-nums">{formatNumber(totals.fat)}</dd></div>
+            <div><dt className="text-ink-tertiary text-xs font-normal">CHO (g)</dt><dd className="text-ink tabular-nums">{formatNumber(totals.carbs)}</dd></div>
+            <div><dt className="text-ink-tertiary text-xs font-normal">Kcal</dt><dd className="text-ink font-bold tabular-nums">{formatNumber(totals.kcal)}</dd></div>
+          </dl>
+        </div>
+      </div>
     </div>
   );
 }
